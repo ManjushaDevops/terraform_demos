@@ -1,0 +1,50 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>4.1.0"
+    }
+  }
+  backend "azurerm" {
+    resource_group_name  = "tfstate-demo"          # Can be passed via `-backend-config=`"resource_group_name=<resource group name>"` in the `init` command.
+    storage_account_name = "day20027"                              # Can be passed via `-backend-config=`"storage_account_name=<storage account name>"` in the `init` command.
+    container_name       = "tfstate"                               # Can be passed via `-backend-config=`"container_name=<container name>"` in the `init` command.
+    key                  = "dev.terraform.tfstate"                # Can be passed via `-backend-config=`"key=<blob key name>"` in the `init` command.
+  }
+  required_version = ">= 1.14.0"
+
+  
+}
+
+provider "azurerm" {
+  features {}
+}
+
+variable "environment"{
+    type = string
+    description = "the env type"
+    default = "staging"
+}
+locals {
+  common_tags = {
+    environment = "dev"
+    lob = "banking"
+    stage = "alpha"
+  }
+}
+resource "azurerm_resource_group" "example" {
+  name     = "example-resources"
+  location = "West Europe"
+}
+
+resource "azurerm_storage_account" "example" {
+  name                     = "manjushatutorial101"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+
+  tags = {
+    environment = var.environment
+  }
+}
